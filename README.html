@@ -1,0 +1,285 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://code.jquery.com https://unpkg.com https://d3js.org https://threejs.org https://cdn.plot.ly https://stackpath.bootstrapcdn.com https://maps.googleapis.com https://cdn.tailwindcss.com https://ajax.googleapis.com https://kit.fontawesome.com https://cdn.datatables.net https://maxcdn.bootstrapcdn.com https://code.highcharts.com https://tako-static-assets-production.s3.amazonaws.com https://www.youtube.com https://fonts.googleapis.com https://fonts.gstatic.com https://pfst.cf2.poecdn.net https://puc.poecdn.net https://i.imgur.com https://wikimedia.org https://*.icons8.com https://*.giphy.com https://picsum.photos https://images.unsplash.com; frame-src 'self' https://www.youtube.com https://trytako.com; child-src 'self'; manifest-src 'self'; worker-src 'self'; upgrade-insecure-requests; block-all-mixed-content;">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>富途资金后台原型</title>
+<style>
+/* 主题 */
+:root{
+  --primary:#2253ff;
+  --primary-hover:#3e7bff;
+  --bg:#f5f7fb;
+  --card-bg:#ffffff;
+  --border:#e5e8ef;
+  --text:#1f2329;
+  --text-light:#6b7280;
+  --radius:6px;
+  --shadow:0 2px 6px rgba(0,0,0,.05);
+  --sidebar-w:220px;
+  font-family:"Noto Sans SC",system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial,sans-serif;
+  color:var(--text);
+}
+/* 布局 */
+body{margin:0;background:var(--bg);display:flex;min-height:100vh;}
+nav{
+  width:var(--sidebar-w);background:#172554;color:#fff;display:flex;flex-direction:column;
+}
+nav h1{font-size:20px;font-weight:600;margin:20px 0 10px;text-align:center;}
+nav a{
+  display:flex;align-items:center;gap:8px;
+  padding:12px 20px;color:#cbd5e1;text-decoration:none;font-size:14px;
+}
+nav a.active,nav a:hover{background:rgba(255,255,255,.1);color:#fff;}
+nav svg{width:18px;height:18px;flex-shrink:0;}
+/* 主内容 */
+main{flex:1;padding:24px;overflow:auto;}
+.page{display:none;animation:fade .25s;}
+.page.active{display:block;}
+@keyframes fade{from{opacity:.3;transform:translateY(6px)}to{opacity:1;transform:none}}
+.card{
+  background:var(--card-bg);border:1px solid var(--border);
+  border-radius:var(--radius);box-shadow:var(--shadow);
+  padding:20px;margin-bottom:24px;
+}
+/* 表格样式 */
+table{width:100%;border-collapse:collapse;font-size:14px;}
+th,td{padding:10px 12px;border-bottom:1px solid var(--border);text-align:left;white-space:nowrap;}
+th{background:#f1f5f9;font-weight:600;}
+.badge{display:inline-block;padding:2px 8px;font-size:12px;border-radius:12px;color:#fff}
+.badge.pending{background:#eab308}.badge.matched{background:#10b981}
+/* 表头工具 */
+.toolbar{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;align-items:center}
+.toolbar input,.toolbar select{
+  padding:6px 10px;border:1px solid var(--border);border-radius:var(--radius);background:#fff;font-size:14px;
+}
+.button{
+  padding:6px 16px;border-radius:var(--radius);border:none;cursor:pointer;
+  font-size:14px;line-height:22px;font-weight:500;
+}
+.button.primary{background:var(--primary);color:#fff}
+.button.primary:hover{background:var(--primary-hover)}
+.button.ghost{background:#fff;border:1px solid var(--border);color:var(--text);}
+/* 弹窗 */
+.modal-cover{
+  position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;z-index:1000;
+}
+.modal{background:#fff;width:90%;max-width:680px;border-radius:8px;box-shadow:var(--shadow);animation:pop .25s}
+@keyframes pop{from{opacity:.3;transform:scale(.96)}to{opacity:1;transform:none}}
+.modal-header{padding:16px 24px;font-weight:600;border-bottom:1px solid var(--border)}
+.modal-body{padding:20px;display:flex;gap:20px;flex-wrap:wrap}
+.modal-footer{padding:16px 24px;border-top:1px solid var(--border);text-align:right;display:flex;gap:12px;justify-content:flex-end}
+.modal-body .col{flex:1 1 260px}
+.readonly-group label{font-size:12px;color:var(--text-light)}
+.readonly-group div{padding:6px 8px;border:1px solid var(--border);border-radius:var(--radius);background:#f8fafc;margin-bottom:10px}
+.candidate{display:flex;align-items:center;justify-content:space-between;padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius);margin-bottom:8px}
+.progress{flex:0 0 90px;height:6px;background:#e5e7eb;border-radius:3px;overflow:hidden}
+.progress>span{display:block;height:100%;background:#10b981}
+/* 右侧动作卡片 */
+.side-card{border:1px solid var(--border);border-radius:var(--radius);padding:16px;background:#fff;margin-bottom:16px}
+.radio-group{display:flex;gap:16px;margin:12px 0}
+textarea{width:100%;min-height:80px;padding:8px;border:1px solid var(--border);border-radius:var(--radius);resize:vertical}
+/* 步骤 */
+.steps{display:flex;gap16px;margin-bottom:24px}
+.step{display:flex;flex-direction:column;align-items:center;font-size:12px;color:var(--text-light)}
+.step .circle{
+  width:24px;height:24px;border-radius:50%;background:#e5e7eb;display:flex;align-items:center;justify-content:center;font-weight:600;margin-bottom:4px
+}
+.step.active .circle{background:var(--primary);color:#fff}
+.step.active{color:var(--primary)}
+/* 9. 响应式 */
+@media(max-width:768px){
+  nav{position:fixed;left:-100%;transition:left .3s}
+  nav.show{left:0}
+  main{padding:16px}
+  .toolbar input{flex:1 1 120px}
+}
+/* 滑入菜单按钮 */
+.menu-btn{display:none;position:fixed;top:16px;left:16px;z-index:1100;background:var(--primary);border:none;color:#fff;width:36px;height:36px;border-radius:50%;}
+@media(max-width:768px){.menu-btn{display:block}}
+</style>
+</head>
+<body>
+
+<button class="menu-btn" onclick="toggleMenu()">☰</button>
+
+<!-- =============== 侧边栏 =============== -->
+<nav id="sidebar">
+  <h1>资金系统</h1>
+  <h2>声明</h2>
+  <p>此页面</p>
+  <a href="#page-list" class="active" onclick="navTo(event)"><svg viewBox="0 0 24 24"><path fill="currentColor" d="M3 13h2v-2H3v2m4 0h2v-2H7v2m4 0h2v-2h-2v2m4 0h2v-2h-2v2m4 0h2v-2h-2v2M3 17h2v-2H3v2m0 4h2v-2H3v2m4 0h2v-2H7v2m4 0h2v-2h-2v2m4 0h2v-2h-2v2m4 0h2v-2h-2v2M3 9h18V3H3v6z"></path></svg>来账列表</a>
+  <a href="#page-approval" onclick="navTo(event)"><svg viewBox="0 0 24 24"><path fill="currentColor" d="M13 9H7v6h6V9m6-8H5a2 2 0 0 0-2 2v18l4-4h12a2 2 0 0 0 2-2V3a2 2 0 0 0-2-2Z"></path></svg>审批详情</a>
+  <a href="#page-refund" onclick="navTo(event)"><svg viewBox="0 0 24 24"><path fill="currentColor" d="M5,13V11H11V5H13V11H19V13H13V19H11V13H5Z"></path></svg>退回指令</a>
+</nav>
+
+<!-- =============== 主内容 =============== -->
+<main>
+
+  <!-- 1. 来账列表页 -->
+  <section class="page active" id="page-list">
+    <div class="card">
+      <div class="toolbar">
+        <button class="button primary" onclick="openModal()">认领</button>
+        <input type="date">
+        <select><option>全部币种</option><option>USD</option><option>HKD</option></select>
+        <input type="text" placeholder="金额起" style="width:80px">
+        <span>-</span>
+        <input type="text" placeholder="金额止" style="width:80px">
+        <input type="search" placeholder="关键字搜索…" style="flex:1 1 160px">
+        <span class="badge pending">待匹配 28</span>
+      </div>
+
+      <div style="overflow-x:auto">
+      <table>
+        <thead>
+          <tr>
+            <th>银行流水号</th><th>入账时间</th><th>转入金额</th><th>币种</th>
+            <th>付款人姓名</th><th>付款银行</th><th>富途账号</th><th>匹配状态</th><th>操作</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>BK202507090001</td><td>2025-07-09 09:12</td><td>100.00</td><td>USD</td>
+            <td>张明</td><td>中国银行</td><td>FT123456</td>
+            <td><span class="badge pending">待匹配</span></td>
+            <td><button class="button ghost" onclick="openModal()">认领</button></td>
+          </tr>
+          <tr>
+            <td>BK202507090002</td><td>2025-07-09 09:16</td><td>50,000.00</td><td>HKD</td>
+            <td>Li Wei</td><td>HSBC</td><td>FT654321</td>
+            <td><span class="badge matched">已匹配</span></td>
+            <td><button class="button ghost">查看</button></td>
+          </tr>
+        </tbody>
+      </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2. 审批详情页 -->
+  <section class="page" id="page-approval">
+    <div class="card" style="display:flex;flex-wrap:wrap;gap:24px">
+      <!-- 左 -->
+      <div style="flex:1 1 380px;min-width:300px">
+        <h2 style="margin-top:0">入金审批 <span class="badge pending">待复审</span></h2>
+        <h1 style="margin:8px 0;font-size:28px;color:var(--primary)">$+100.00 USD</h1>
+        <table>
+          <tbody>
+            <tr><th>银行流水号</th><td>BK202507090001</td></tr>
+            <tr><th>入账时间</th><td>2025-07-09 09:12</td></tr>
+            <tr><th>付款人</th><td>张明</td></tr>
+            <tr><th>付款银行</th><td>中国银行</td></tr>
+            <tr><th>富途账号</th><td>FT123456</td></tr>
+            <tr><th>系统匹配账号</th><td>FT123456 (张明)</td></tr>
+          </tbody>
+        </table>
+        <h3>银行回单</h3>
+        <div style="border:1px solid var(--border);border-radius:var(--radius);height:160px;background:#f1f5f9;display:flex;align-items:center;justify-content:center;color:var(--text-light)">回单缩略图</div>
+      </div>
+      <!-- 右 -->
+      <div style="flex:1 1 260px;min-width:240px">
+        <div class="side-card">
+          <div>风控评分</div>
+          <div style="height:8px;background:linear-gradient(90deg,#ef4444 0%,#facc15 50%,#22c55e 100%);border-radius:4px;margin:8px 0 16px;position:relative">
+            <div style="position:absolute;left:70%;top:-6px;width:2px;height:20px;background:#0003"></div>
+          </div>
+          <div style="font-size:12px;color:var(--text-light)">初审结果：已通过</div>
+
+          <div class="radio-group">
+            <label><input type="radio" name="decision"> 通过</label>
+            <label><input type="radio" name="decision"> 拒绝</label>
+          </div>
+          <textarea placeholder="审批意见…"></textarea>
+          <button class="button primary" style="width:100%;margin-top:12px">提交复审</button>
+          <button class="button ghost" style="width:100%;margin-top:6px" onclick="navToHash('#page-list')">返回</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. 退回指令页 -->
+  <section class="page" id="page-refund">
+    <div class="card">
+      <div class="steps">
+        <div class="step"><div class="circle">1</div><span>确认信息</span></div>
+        <div class="step active"><div class="circle">2</div><span>生成指令</span></div>
+        <div class="step"><div class="circle">3</div><span>完成</span></div>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:24px">
+        <!-- 表单 -->
+        <div style="flex:1 1 320px;min-width:260px">
+          <label>退回理由</label><br>
+          <select style="width:100%;margin-bottom:12px">
+            <option>请选择</option><option>异名入金</option><option>金额不符</option>
+          </select>
+          <label>退回账户</label><br>
+          <input type="text" disabled="" value="张明  ****1234" style="width:100%;margin-bottom:12px;padding:6px 10px;border:1px solid var(--border);border-radius:var(--radius)">
+          <label>金额</label><br>
+          <input type="text" disabled="" value="100.00 USD" style="width:100%;margin-bottom:12px;padding:6px 10px;border:1px solid var(--border);border-radius:var(--radius)">
+          <label><input type="checkbox"> 同步邮件通知客户</label>
+        </div>
+        <!-- 预览 -->
+        <div style="flex:1 1 280px;min-width:240px">
+          <div style="border:1px solid var(--border);border-radius:var(--radius);height:280px;background:#f1f5f9;display:flex;align-items:center;justify-content:center;color:var(--text-light)">PDF 预览</div>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-top:24px">
+        <button class="button ghost" onclick="navToHash('#page-list')">上一步</button>
+        <button class="button primary">生成 PDF 并下载</button>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- =============== 匹配弹窗 =============== -->
+<div class="modal-cover" id="matchModal">
+  <div class="modal">
+    <div class="modal-header">匹配入金</div>
+    <div class="modal-body">
+      <div class="col">
+        <div class="readonly-group"><label>银行流水号</label><div>BK202507090001</div></div>
+        <div class="readonly-group"><label>金额</label><div>100.00</div></div>
+        <div class="readonly-group"><label>币种</label><div>USD</div></div>
+        <div class="readonly-group"><label>付款人姓名</label><div>张明</div></div>
+        <div class="readonly-group"><label>付款银行</label><div>中国银行</div></div>
+        <div class="readonly-group"><label>备注</label><div>FT123456</div></div>
+      </div>
+      <div class="col">
+        <div style="margin-bottom:8px;font-weight:600">系统候选账号</div>
+        <div class="candidate">FT123456 (张明)<div class="progress"><span style="width:100%"></span></div></div>
+        <div class="candidate">FT654321 (张明)<div class="progress"><span style="width:80%"></span></div></div>
+        <div class="candidate">FT987654 (Zhang Ming)<div class="progress"><span style="width:60%"></span></div></div>
+        <input type="search" placeholder="搜索客户编号/姓名…" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:var(--radius)">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="button ghost" onclick="closeModal()">取消</button>
+      <button class="button primary" onclick="closeModal()">确认匹配</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* 导航切换 */
+function navTo(e){
+  e.preventDefault();
+  const hash=e.currentTarget.getAttribute('href');
+  navToHash(hash);
+  if(window.innerWidth<768)toggleMenu(); /* 小屏自动收起 */
+}
+function navToHash(hash){
+  document.querySelectorAll('nav a').forEach(a=>a.classList.toggle('active',a.getAttribute('href')===hash));
+  document.querySelectorAll('.page').forEach(p=>p.classList.toggle('active','#'+p.id===hash));
+  location.hash=hash;
+}
+/* 匹配弹窗 */
+function openModal(){document.getElementById('matchModal').style.display='flex'}
+function closeModal(){document.getElementById('matchModal').style.display='none'}
+/* 移动端菜单 */
+function toggleMenu(){document.getElementById('sidebar').classList.toggle('show')}
+window.addEventListener('hashchange',()=>navToHash(location.hash||'#page-list'));
+window.addEventListener('load',()=>navToHash(location.hash||'#page-list'));
+</script>
+
+
+</body></html>
